@@ -9,6 +9,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,17 +21,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies for Sui
-        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config libclang-dev
-
-      - name: Install Sui CLI (fixed version)
+      # Hata olduğunda hangi satırda kırıldığını görmek için
+      - name: Enable strict bash
         run: |
-          curl -L https://github.com/MystenLabs/sui/releases/download/testnet-v1.31.0/sui-testnet-1.31.0-ubuntu-x86_64.tgz -o sui.tgz
+          echo "Bash set -euxo pipefail aktif."
+        shell: bash -euxo pipefail {0}
+
+      - name: Show repo tree (debug)
+        run: |
+          pwd
+          ls -la
+          echo "---- move ----"
+          ls -la move || true
+          echo "---- ui ----"
+          ls -la ui || true
+
+      # (Sui için gerekli olabilecek paketler)
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl tar libssl-dev pkg-config libclang-dev
+
+      # Sui CLI kurulumu (yol farklarına dayanıklı)
+      - name: Install Sui CLI (stable)
+        run: |
+          set -euxo pipefail
+          VERSION="testnet-v1.31.0"
+          ASSET="sui-testnet-1.31.0-ubuntu-x86_64.tgz"
+          curl -L "https://github.com/MystenLabs/sui/releases/download/${VERSION}/${ASSET}" -o sui.tgz
           tar -xzf sui.tgz
-          sudo mv sui /usr/local/bin/
+          # Çıkan arşivde 'sui' ikilisini bul ve /usr/local/bin'e taşı
+          SUI_PATH=$(find . -type f -name "sui" | head -n1)
+          sudo mv "$SUI_PATH" /usr/local/bin/sui
+          sudo chmod +x /usr/local/bin/sui
           sui --version
 
-      - name: Build & Test Move contracts
+      - name: Build & test Move
         working-directory: move
         run: |
           sui move build
@@ -37,12 +66,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'ui/package-lock.json'
 
       - name: Build frontend
         working-directory: ui
         run: |
           npm ci || npm install
           npm run build
+          # Çıktı gerçekten var mı?
+          test -d dist || (echo "ui/dist bulunamadı (Vite mi? CRA mı?)." && exit 2)
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
