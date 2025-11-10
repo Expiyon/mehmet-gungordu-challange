@@ -1,5 +1,4 @@
 name: Build, Test and Deploy
-
 on:
   push:
     branches: [ main ]
@@ -13,19 +12,22 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Sui CLI
+      - name: Install dependencies for Sui
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config libclang-dev
+
+      - name: Install Sui CLI (fixed version)
         run: |
-          LATEST_URL=$(curl -s https://api.github.com/repos/MystenLabs/sui/releases/latest | grep browser_download_url | grep linux-x86_64 | head -n 1 | cut -d '"' -f 4)
-          curl -L "$LATEST_URL" -o sui.tgz
+          curl -L https://github.com/MystenLabs/sui/releases/download/testnet-v1.31.0/sui-testnet-1.31.0-ubuntu-x86_64.tgz -o sui.tgz
           tar -xzf sui.tgz
           sudo mv sui /usr/local/bin/
           sui --version
 
-      - name: Build and test Move contracts
+      - name: Build & Test Move contracts
         working-directory: move
         run: |
           sui move build
@@ -39,10 +41,10 @@ jobs:
       - name: Build frontend
         working-directory: ui
         run: |
-          npm install
+          npm ci || npm install
           npm run build
 
-      - name: Upload artifact for Pages
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ui/dist
