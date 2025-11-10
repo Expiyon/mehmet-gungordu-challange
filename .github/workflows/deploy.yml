@@ -46,9 +46,9 @@ jobs:
       - name: Install Sui CLI (stable)
         run: |
           set -euxo pipefail
-          VERSION="testnet-v1.31.0"
-          ASSET="sui-testnet-1.31.0-ubuntu-x86_64.tgz"
-          curl -L "https://github.com/MystenLabs/sui/releases/download/${VERSION}/${ASSET}" -o sui.tgz
+          VERSION="testnet-v1.60.0"
+          ASSET="sui-testnet-1.60.0-ubuntu-x86_64.tgz"
+          curl -L "https://github.com/MystenLabs/sui/releases/download/1.60.0.1/sui-testnet-v1.60.0-ubuntu-x86_64.tgz" -o sui.tgz
           tar -xzf sui.tgz
           # Çıkan arşivde 'sui' ikilisini bul ve /usr/local/bin'e taşı
           SUI_PATH=$(find . -type f -name "sui" | head -n1)
