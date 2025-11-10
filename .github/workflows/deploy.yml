@@ -1,0 +1,59 @@
+name: Build, Test and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Sui CLI
+        run: |
+          LATEST_URL=$(curl -s https://api.github.com/repos/MystenLabs/sui/releases/latest | grep browser_download_url | grep linux-x86_64 | head -n 1 | cut -d '"' -f 4)
+          curl -L "$LATEST_URL" -o sui.tgz
+          tar -xzf sui.tgz
+          sudo mv sui /usr/local/bin/
+          sui --version
+
+      - name: Build and test Move contracts
+        working-directory: move
+        run: |
+          sui move build
+          sui move test
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build frontend
+        working-directory: ui
+        run: |
+          npm install
+          npm run build
+
+      - name: Upload artifact for Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ui/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
