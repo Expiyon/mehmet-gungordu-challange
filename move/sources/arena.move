@@ -76,7 +76,7 @@ public fun battle(hero: Hero, arena: Arena, ctx: &mut TxContext) {
         // Emit ArenaCompleted event
         event::emit(ArenaCompleted {
             winner_hero_id: warrior_id,
-            loser_hero_id: hero_id,
+            loser_hero_id: hero_i
             timestamp: ctx.epoch_timestamp_ms(),
         });
     };
