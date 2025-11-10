@@ -20,7 +20,8 @@ import { useNetworkVariable } from "../networkConfig";
 import { Hero } from "../types/hero";
 import { transferHero } from "../utility/helpers/transfer_hero";
 import { listHero } from "../utility/marketplace/list_hero";
-import { createArena } from "../utility/arena/create_arena";
+import { createArena } from "../utility/battle/create_arena";
+import { battle } from "../utility/battle/battle";
 import { RefreshProps } from "../types/props";
 
 export function OwnedObjects({ refreshKey, setRefreshKey }: RefreshProps) {

@@ -16,7 +16,7 @@ import {
 import { useState } from "react";
 import { useNetworkVariable } from "../networkConfig";
 import { Hero, Arena } from "../types/hero";
-import { battle } from "../utility/arena/battle";
+import { battle } from "../utility/battle/battle";
 import { RefreshProps } from "../types/props";
 
 export default function Arenas({ refreshKey, setRefreshKey }: RefreshProps) {
